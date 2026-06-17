@@ -16,6 +16,7 @@
 - MyBatis-Plus `insert()` returns an `int`, meaning affected rows, not a `boolean`.
 - Public repositories should not contain local database passwords.
 - Learned that Lombok can reduce boilerplate code such as getters, setters, and constructors, but this project currently uses explicit JavaBean methods for clearer JDK 17 compatibility.
+- Use Postman to test RESTful API endpoints and verify the correctness of various HTTP methods (GET, POST, PUT, DELETE).
 - All kinds of annotations in Spring Boot, such as @RestController, @RequestMapping, @Autowired, and @RequestBody, are utilized to simplify configuration and implement Inversion of Control (IoC).
 
 ### Next Ideas
