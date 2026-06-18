@@ -4,15 +4,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.springframework.http.MediaType;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.hamcrest.Matchers.containsString; // 注意：这个来自 Hamcrest 库
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,10 +18,11 @@ import static org.mockito.ArgumentMatchers.any;
 import com.example.demo.controller.CoffeeController;
 import com.example.demo.entity.Coffee;
 import com.example.demo.mapper.CoffeeMapper;
-import com.example.demo.service.CoffeeService;
+import com.example.demo.mapper.UserMapper;
 
 
 @WebMvcTest(CoffeeController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CoffeeControllerTest {
     
     @Autowired
@@ -32,6 +30,9 @@ class CoffeeControllerTest {
     
     @MockBean
     private CoffeeMapper coffeeMapper;
+
+    @MockBean
+    private UserMapper userMapper;
     
     @Test
      void testAddCoffee() throws Exception {
@@ -44,4 +45,3 @@ class CoffeeControllerTest {
                 .andExpect(status().isOk());
     }
 }
-

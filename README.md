@@ -6,10 +6,12 @@ This repository records my daily Spring Boot learning progress. The project star
 
 - Java 17
 - Spring Boot 3.2.11
+- Spring Security
 - MyBatis-Plus 3.5.7
 - MySQL
 - Maven Wrapper
 - JUnit 5 / Spring Boot Test
+- Lombok
 
 ## What This Project Includes
 
@@ -18,6 +20,8 @@ This repository records my daily Spring Boot learning progress. The project star
 - Service and controller layers
 - Global exception handling
 - Configuration with environment variables
+- Database-backed login authentication with Spring Security
+- BCrypt password verification
 - Unit tests and web layer tests
 - A daily learning log
 
@@ -34,20 +38,25 @@ This repository records my daily Spring Boot learning progress. The project star
 │   ├── main/
 │   │   ├── java/com/example/demo/
 │   │   │   ├── DemoApplication.java
+│   │   │   ├── config/
+│   │   │   │   └── SecurityConfig.java
 │   │   │   ├── controller/
 │   │   │   │   ├── CoffeeController.java
 │   │   │   │   └── CoffeeShopController.java
 │   │   │   ├── entity/
-│   │   │   │   └── Coffee.java
+│   │   │   │   ├── Coffee.java
+│   │   │   │   └── User.java
 │   │   │   ├── exception/
 │   │   │   │   └── CoffeeNotFoundException.java
 │   │   │   ├── handler/
 │   │   │   │   ├── ErrorResponse.java
 │   │   │   │   └── GlobalExceptionHandler.java
 │   │   │   ├── mapper/
-│   │   │   │   └── CoffeeMapper.java
+│   │   │   │   ├── CoffeeMapper.java
+│   │   │   │   └── UserMapper.java
 │   │   │   └── service/
-│   │   │       └── CoffeeService.java
+│   │   │       ├── CoffeeService.java
+│   │   │       └── UserDetailsServiceImpl.java
 │   │   └── resources/
 │   │       ├── application.properties
 │   │       └── application.yml
@@ -71,10 +80,11 @@ This repository records my daily Spring Boot learning progress. The project star
 | Layer | Main Files | Responsibility |
 | --- | --- | --- |
 | Application entry | `DemoApplication.java` | Starts the Spring Boot application and scans mapper interfaces. |
+| Security config | `SecurityConfig` | Configures protected routes, form login, and BCrypt password encoding. |
 | Controller | `CoffeeController`, `CoffeeShopController` | Receives HTTP requests, maps URLs to Java methods, and returns responses. |
-| Service | `CoffeeService` | Holds business logic and coordinates mapper calls. |
-| Mapper | `CoffeeMapper` | Extends MyBatis-Plus `BaseMapper<Coffee>` and provides CRUD access to the database. |
-| Entity | `Coffee` | Represents the `coffee` table and maps Java fields to database columns. |
+| Service | `CoffeeService`, `UserDetailsServiceImpl` | Holds business logic and loads database users for Spring Security authentication. |
+| Mapper | `CoffeeMapper`, `UserMapper` | Extends MyBatis-Plus `BaseMapper` interfaces and provides CRUD access to database tables. |
+| Entity | `Coffee`, `User` | Represents the `coffee` and `sys_user` tables and maps Java fields to database columns. |
 | Exception | `CoffeeNotFoundException` | Represents domain-specific errors. |
 | Handler | `GlobalExceptionHandler`, `ErrorResponse` | Converts exceptions into consistent API error responses. |
 | Configuration | `application.yml`, `application.properties` | Stores server, datasource, MyBatis-Plus, and app-specific settings. |
@@ -84,6 +94,7 @@ This repository records my daily Spring Boot learning progress. The project star
 
 ```text
 Client
+  -> Spring Security Filter Chain
   -> Controller
   -> Service
   -> Mapper
@@ -94,10 +105,32 @@ Client
 For example, when adding a coffee:
 
 1. `POST /coffee/add` receives JSON in `CoffeeController`.
-2. The request body is converted into a `Coffee` object.
-3. MyBatis-Plus calls `CoffeeMapper.insert(coffee)`.
-4. MySQL stores the row and auto-generates the id.
-5. The API returns a success message.
+2. Spring Security checks whether the user is authenticated.
+3. The request body is converted into a `Coffee` object.
+4. MyBatis-Plus calls `CoffeeMapper.insert(coffee)`.
+5. MySQL stores the row and auto-generates the id.
+6. The API returns a success message.
+
+### Authentication Flow
+
+The application uses Spring Security form login.
+
+```text
+Browser
+  -> GET /login
+  -> POST /login with username, password, and CSRF token
+  -> UserDetailsServiceImpl
+  -> UserMapper
+  -> sys_user table
+  -> BCryptPasswordEncoder.matches(...)
+```
+
+Important details:
+
+- All routes require login except static resources such as `/css/**` and `/js/**`.
+- Users are loaded from the `sys_user` table.
+- Passwords in `sys_user.password` must be BCrypt hashes, not plain text.
+- Roles are normalized so both `USER` and `ROLE_USER` can be handled safely.
 
 ### MyBatis-Plus Usage
 
@@ -132,6 +165,8 @@ spring:
 ```
 
 This keeps local database passwords out of GitHub.
+
+When running from VS Code, the Java process may not automatically inherit shell environment variables. A local `.vscode/launch.json` can pass `DB_USERNAME` and `DB_PASSWORD` to the app. The `.vscode/` folder is ignored by Git, so local secrets do not get committed.
 
 ### Build And CI
 
@@ -173,6 +208,12 @@ The app runs on:
 
 ```text
 http://localhost:9090
+```
+
+The default Spring Security login page is available at:
+
+```text
+http://localhost:9090/login
 ```
 
 ## API Notes
